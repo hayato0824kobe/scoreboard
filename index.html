@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SCOREBOARD</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:      #f0ede8;
+  --surface: #ffffff;
+  --bg2:     #f7f5f1;
+  --border:  #e0dbd3;
+  --text:    #18150f;
+  --muted:   #a09880;
+  --live:    #e03020;
+  --up:      #2563eb;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Barlow', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+.topbar {
+  background: var(--text); height: 42px;
+  display: flex; align-items: center; justify-content: space-between; padding: 0 1.5rem;
+}
+.logo { font-family:'Barlow Condensed',sans-serif; font-size:1.35rem; font-weight:800; letter-spacing:0.1em; color:white; }
+.topbar-right { display:flex; align-items:center; gap:0.75rem; }
+.live-pill { display:flex;align-items:center;gap:5px; background:var(--live);color:white; padding:3px 9px;border-radius:2px; font-size:0.62rem;letter-spacing:0.15em;font-family:'DM Mono',monospace; }
+.live-dot { width:5px;height:5px;background:white;border-radius:50%;animation:blink 1.3s ease-in-out infinite; }
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.1}}
+#clk { color:#777;font-size:0.68rem;font-family:'DM Mono',monospace; }
+.icon-btn { background:transparent;border:1px solid #444;color:#999; padding:3px 9px;border-radius:2px;cursor:pointer; font-size:0.62rem;font-family:'DM Mono',monospace; display:flex;align-items:center;gap:5px;transition:all 0.18s; }
+.icon-btn:hover{border-color:white;color:white}
+.icon-btn.spin svg{animation:spin 0.7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.tabs { background:var(--surface);border-bottom:2px solid var(--text); display:flex;overflow-x:auto;scrollbar-width:none;padding:0 1rem; }
+.tabs::-webkit-scrollbar{display:none}
+.tab { padding:0.7rem 1.1rem;cursor:pointer; font-family:'Barlow Condensed',sans-serif;font-size:0.9rem;font-weight:700; letter-spacing:0.08em;text-transform:uppercase; color:var(--muted);border-bottom:3px solid transparent;margin-bottom:-2px; transition:all 0.18s;white-space:nowrap;display:flex;align-items:center;gap:6px; }
+.tab:hover{color:var(--text)}
+.tab.active{color:white!important;background:var(--sc);border-color:var(--sc)}
+.tab-n{font-family:'DM Mono',monospace;font-size:0.58rem;padding:1px 5px;border-radius:2px;background:var(--bg);color:var(--muted);}
+.tab.active .tab-n{background:rgba(255,255,255,0.25);color:white}
+
+.status-bar { background:var(--bg2);border-bottom:1px solid var(--border); height:30px;display:flex;align-items:center;padding:0 1.5rem;gap:1rem; font-family:'DM Mono',monospace;font-size:0.65rem; }
+.s-live{color:var(--live);font-weight:600}
+.s-time{color:var(--muted)}
+.s-auto{background:#e8f5e9;color:#2e7d32;padding:1px 7px;border-radius:2px;font-size:0.6rem;font-weight:700}
+
+main{max-width:1100px;margin:0 auto;padding:1.5rem 1.25rem}
+
+.sec-head{display:flex;align-items:center;gap:0.75rem;margin-bottom:0.6rem;margin-top:1.5rem}
+.sec-head:first-child{margin-top:0}
+.sec-label{font-family:'Barlow Condensed',sans-serif;font-size:0.78rem;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+.sec-label.live{color:var(--live)}
+.sec-line{flex:1;height:1px;background:var(--border)}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:0.6rem;margin-bottom:0.5rem}
+
+.card{background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--sc);border-radius:5px;padding:0.85rem 1rem;transition:box-shadow 0.2s,transform 0.2s}
+.card:hover{box-shadow:0 4px 20px rgba(0,0,0,0.08);transform:translateY(-1px)}
+@keyframes flash{0%,100%{background:var(--surface)}40%{background:#fffbe0}}
+.card.flash{animation:flash 0.8s ease}
+
+.card-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:0.65rem}
+.c-league{font-family:'DM Mono',monospace;font-size:0.63rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--sc)}
+.c-st{font-family:'DM Mono',monospace;font-size:0.65rem;display:flex;align-items:center;gap:5px}
+.c-st.live{color:var(--live)}
+.c-st.live::before{content:'';width:5px;height:5px;background:var(--live);border-radius:50%;animation:blink 1.3s infinite}
+.c-st.final{color:var(--muted)}
+.c-st.upcoming{color:var(--up)}
+
+.matchup{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:0.5rem}
+.team{display:flex;flex-direction:column}
+.team.r{align-items:flex-end}
+.t-name{font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:700;line-height:1.1}
+.t-sub{font-size:0.65rem;color:var(--muted)}
+.score-c{text-align:center}
+.score-n{font-family:'Barlow Condensed',sans-serif;font-size:2.1rem;font-weight:800;line-height:1;display:flex;align-items:center;justify-content:center;gap:0.2rem}
+.sc-sep{color:var(--border);font-weight:400;font-size:1.4rem}
+.score-vs{font-size:0.85rem;color:var(--muted);letter-spacing:0.1em;font-family:'DM Mono',monospace}
+
+.race-card{grid-column:span 2}
+.race-list{display:flex;flex-direction:column;gap:2px;margin-top:4px}
+.race-row{display:flex;align-items:center;gap:8px;padding:4px 5px;border-radius:3px;font-size:0.8rem}
+.race-row.p1-row{background:#fffbe6}
+.rpos{font-family:'Barlow Condensed',sans-serif;font-size:0.85rem;font-weight:800;width:20px;text-align:center;color:var(--muted)}
+.rpos.p1{color:#c9a800}.rpos.p2{color:#777}.rpos.p3{color:#a0522d}
+.rdrv{font-weight:600;flex:1}
+.rteam{font-size:0.65rem;color:var(--muted)}
+.rgap{font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--muted);white-space:nowrap}
+.rnote{font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--muted);margin-top:5px}
+
+.loading{grid-column:1/-1;padding:2.5rem;text-align:center;color:var(--muted)}
+.spinner{width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--text);border-radius:50%;animation:spin 0.8s linear infinite;display:inline-block;margin-bottom:0.5rem}
+.err-card{grid-column:1/-1;padding:1.25rem;color:var(--live);font-size:0.82rem;background:var(--surface);border:1px solid #fcc;border-radius:5px}
+.empty{grid-column:1/-1;padding:2.5rem;text-align:center;color:var(--muted);font-size:0.82rem}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">⚡ SCOREBOARD</div>
+  <div class="topbar-right">
+    <div class="live-pill"><div class="live-dot"></div>LIVE</div>
+    <span id="clk"></span>
+    <button class="icon-btn" id="rBtn" onclick="refreshAll()">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
+        <path d="M21 3v5h-5"/>
+        <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
+        <path d="M8 16H3v5"/>
+      </svg>REFRESH
+    </button>
+  </div>
+</div>
+
+<div class="tabs" id="tabs"></div>
+
+<div class="status-bar">
+  <span class="s-live" id="live-n">— LIVE</span>
+  <span class="s-time" id="upd-time">—</span>
+  <span class="s-auto">AUTO 30s</span>
+</div>
+
+<main id="main">
+  <div class="grid"><div class="loading"><div class="spinner"></div><br>読み込み中…</div></div>
+</main>
+
+<script>
+// ════════════════════════════════════
+//  ★ APIキーをここに入力してください ★
+// ════════════════════════════════════
+const BDL_API_KEY = 'bf68b25c-4b3e-48ef-8024-78fc601e71e7';
+// ════════════════════════════════════
+
+const BDL = 'https://api.balldontlie.io';
+const F1  = 'https://api.openf1.org/v1';
+
+const SPORTS = {
+  all: { label:'ALL', icon:'🌐', color:'#555' },
+  nba: { label:'NBA', icon:'🏀', color:'#e05a10' },
+  nfl: { label:'NFL', icon:'🏈', color:'#14357a' },
+  nhl: { label:'NHL', icon:'🏒', color:'#007a9e' },
+  f1:  { label:'F1',  icon:'🏎', color:'#cc1e00' },
+};
+
+let sport = 'all';
+let data  = { nba: null, nfl: null, nhl: null, f1: null };
+let liveN = { nba: 0, nfl: 0, nhl: 0, f1: 0 };
+
+// ── INIT ──────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  setInterval(() => {
+    document.getElementById('clk').textContent = new Date().toLocaleTimeString('ja-JP');
+  }, 1000);
+  renderTabs();
+  fetchAll();
+  setInterval(fetchAll, 30000);
+});
+
+// ── FETCH ─────────────────────────────────────
+async function fetchAll() {
+  await Promise.all([fetchNBA(), fetchNFL(), fetchNHL(), fetchF1()]);
+  document.getElementById('upd-time').textContent =
+    '最終更新 ' + new Date().toLocaleTimeString('ja-JP');
+  renderTabs();
+  renderMain();
+}
+
+async function refreshAll() {
+  const b = document.getElementById('rBtn');
+  b.classList.add('spin');
+  await fetchAll();
+  b.classList.remove('spin');
+}
+
+// NBA
+async function fetchNBA() {
+  try {
+    const today = todayJST();
+    const r = await fetch(`${BDL}/nba/v1/games?dates[]=${today}&per_page=20`, {
+      headers: { Authorization: BDL_API_KEY }
+    });
+    if (!r.ok) throw new Error(`${r.status}`);
+    const j = await r.json();
+    data.nba = j.data.map(g => {
+      const st = parseStatus(g.status);
+      return {
+        id: 'nba-' + g.id,
+        league: 'NBA ' + (g.home_team?.conference ?? ''),
+        status: st,
+        time: st === 'live'  ? (g.period_time ?? String(g.period ?? '—'))
+            : st === 'final' ? 'FINAL'
+            : fmtTime(g.datetime ?? g.date),
+        home: { name: g.home_team?.name ?? '—', sub: g.home_team?.city ?? '' },
+        away: { name: g.visitor_team?.name ?? '—', sub: g.visitor_team?.city ?? '' },
+        hs: st !== 'upcoming' ? (g.home_team_score ?? 0) : null,
+        as: st !== 'upcoming' ? (g.visitor_team_score ?? 0) : null,
+      };
+    });
+    liveN.nba = data.nba.filter(g => g.status === 'live').length;
+  } catch (e) { data.nba = [{ _err: 'NBA: ' + e.message }]; liveN.nba = 0; }
+}
+
+// NFL
+async function fetchNFL() {
+  try {
+    const season = new Date().getMonth() >= 7 ? new Date().getFullYear() : new Date().getFullYear() - 1;
+    const r = await fetch(`${BDL}/nfl/v1/games?seasons[]=${season}&per_page=50`, {
+      headers: { Authorization: BDL_API_KEY }
+    });
+    if (!r.ok) throw new Error(`${r.status}`);
+    const j = await r.json();
+    const today = todayJST();
+    let games = j.data.filter(g => (g.date ?? '').startsWith(today));
+    if (!games.length) games = j.data.slice(-8); // 今日なければ直近
+    data.nfl = games.map(g => {
+      const st = parseStatus(g.status ?? '');
+      const home = g.home_team, away = g.visitor_team ?? g.away_team;
+      return {
+        id: 'nfl-' + g.id,
+        league: 'NFL ' + (g.week ? 'Week ' + g.week : ''),
+        status: st,
+        time: st === 'live'  ? (g.quarter ? `Q${g.quarter} ${g.time_remaining ?? ''}` : 'LIVE')
+            : st === 'final' ? 'FINAL'
+            : fmtTime(g.date ?? g.datetime),
+        home: { name: home?.name ?? '—', sub: home?.city ?? '' },
+        away: { name: away?.name ?? '—', sub: away?.city ?? '' },
+        hs: g.home_team_score ?? null,
+        as: g.visitor_team_score ?? g.away_team_score ?? null,
+      };
+    });
+    liveN.nfl = data.nfl.filter(g => g.status === 'live').length;
+  } catch (e) { data.nfl = [{ _err: 'NFL: ' + e.message }]; liveN.nfl = 0; }
+}
+
+// NHL
+async function fetchNHL() {
+  try {
+    const today = todayJST();
+    const r = await fetch(`${BDL}/nhl/v1/games?dates[]=${today}&per_page=20`, {
+      headers: { Authorization: BDL_API_KEY }
+    });
+    if (!r.ok) throw new Error(`${r.status}`);
+    const j = await r.json();
+    data.nhl = j.data.map(g => {
+      const st = parseStatus(g.status ?? '');
+      return {
+        id: 'nhl-' + g.id,
+        league: 'NHL ' + (g.home_team?.division ?? ''),
+        status: st,
+        time: st === 'live'  ? (g.period ? `P${g.period} ${g.time ?? ''}` : 'LIVE')
+            : st === 'final' ? 'FINAL'
+            : fmtTime(g.datetime ?? g.date),
+        home: { name: g.home_team?.name ?? '—', sub: g.home_team?.city ?? '' },
+        away: { name: g.visitor_team?.name ?? '—', sub: g.visitor_team?.city ?? '' },
+        hs: st !== 'upcoming' ? (g.home_team_score ?? 0) : null,
+        as: st !== 'upcoming' ? (g.visitor_team_score ?? 0) : null,
+      };
+    });
+    liveN.nhl = data.nhl.filter(g => g.status === 'live').length;
+  } catch (e) { data.nhl = [{ _err: 'NHL: ' + e.message }]; liveN.nhl = 0; }
+}
+
+// F1 (キー不要)
+async function fetchF1() {
+  try {
+    const sRes = await fetch(`${F1}/sessions?session_type=Race`);
+    if (!sRes.ok) throw new Error(`${sRes.status}`);
+    const sessions = await sRes.json();
+    if (!sessions.length) { data.f1 = []; return; }
+
+    const latest = sessions[sessions.length - 1];
+    const key = latest.session_key;
+    const isLive = latest.date_end
+      ? new Date(latest.date_end) > new Date(Date.now() - 3600000)
+      : true;
+
+    const [pRes, dRes] = await Promise.all([
+      fetch(`${F1}/position?session_key=${key}`),
+      fetch(`${F1}/drivers?session_key=${key}`),
+    ]);
+    const positions = await pRes.json();
+    const drivers   = await dRes.json();
+
+    const drvMap = {};
+    drivers.forEach(d => { drvMap[d.driver_number] = d; });
+
+    const latestPos = {};
+    positions.forEach(p => {
+      if (!latestPos[p.driver_number] || new Date(p.date) > new Date(latestPos[p.driver_number].date))
+        latestPos[p.driver_number] = p;
+    });
+
+    const sorted = Object.values(latestPos)
+      .sort((a, b) => a.position - b.position)
+      .slice(0, 10)
+      .map(p => {
+        const d = drvMap[p.driver_number] ?? {};
+        return {
+          pos: p.position,
+          driver: d.full_name ?? d.name_acronym ?? `#${p.driver_number}`,
+          team: d.team_name ?? '—',
+          flag: ({ NLD:'🇳🇱',MCO:'🇲🇨',GBR:'🇬🇧',ESP:'🇪🇸',DEU:'🇩🇪',AUS:'🇦🇺',MEX:'🇲🇽',CAN:'🇨🇦',FIN:'🇫🇮',FRA:'🇫🇷',ITA:'🇮🇹' })[d.country_code] ?? '🏁',
+          gap: p.position === 1 ? 'LEADER' : '—',
+        };
+      });
+
+    data.f1 = [{
+      id: 'f1-' + key,
+      type: 'race',
+      league: `F1 ${latest.meeting_name ?? ''} — ${latest.session_name ?? 'Race'}`,
+      status: isLive ? 'live' : 'final',
+      time:   isLive ? 'LIVE' : 'FINAL',
+      racers: sorted,
+      note:   latest.circuit_short_name ?? '',
+    }];
+    liveN.f1 = isLive ? 1 : 0;
+  } catch (e) { data.f1 = [{ _err: 'F1: ' + e.message }]; liveN.f1 = 0; }
+}
+
+// ── HELPERS ───────────────────────────────────
+function parseStatus(s = '') {
+  const l = s.toLowerCase();
+  if (l.includes('final') || l === 'complete') return 'final';
+  if (l.includes('qtr') || l.includes('half') || l.includes('live') ||
+      l.includes('progress') || l.includes('period') || l.includes('quarter') || /^\d/.test(l))
+    return 'live';
+  return 'upcoming';
+}
+
+function todayJST() {
+  return new Date(Date.now() + 9 * 3600000).toISOString().slice(0, 10);
+}
+
+function fmtTime(dt) {
+  if (!dt) return '—';
+  try {
+    return new Date(dt).toLocaleTimeString('ja-JP', {
+      hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Tokyo',
+    });
+  } catch { return '—'; }
+}
+
+// ── RENDER TABS ───────────────────────────────
+function renderTabs() {
+  const total = Object.values(liveN).reduce((a, b) => a + b, 0);
+  document.getElementById('live-n').textContent = total + ' LIVE';
+  document.getElementById('tabs').innerHTML = Object.entries(SPORTS).map(([k, s]) => {
+    const n = k === 'all' ? total : (liveN[k] ?? 0);
+    return `<div class="tab ${k === sport ? 'active' : ''}" style="--sc:${s.color}" onclick="switchSport('${k}')">
+      ${s.icon} ${s.label}<span class="tab-n">${n}</span>
+    </div>`;
+  }).join('');
+}
+
+function switchSport(s) { sport = s; renderTabs(); renderMain(); }
+
+// ── RENDER MAIN ───────────────────────────────
+function renderMain() {
+  const keys = sport === 'all' ? ['nba', 'nfl', 'nhl', 'f1'] : [sport];
+  let html = '';
+
+  for (const k of keys) {
+    const s  = SPORTS[k];
+    const gs = data[k];
+    const pfx = sport === 'all'
+      ? `<span style="color:${s.color};margin-right:3px">${s.icon} ${s.label}</span> · ` : '';
+
+    if (gs === null) {
+      html += sh(pfx + s.label);
+      html += `<div class="grid"><div class="loading"><div class="spinner"></div><br>取得中…</div></div>`;
+      continue;
+    }
+    const errG = gs.find(g => g._err);
+    if (errG) {
+      html += sh(pfx + s.label);
+      html += `<div class="grid"><div class="err-card">⚠ ${errG._err}</div></div>`;
+      continue;
+    }
+
+    const live     = gs.filter(g => g.status === 'live');
+    const upcoming = gs.filter(g => g.status === 'upcoming');
+    const final    = gs.filter(g => g.status === 'final');
+
+    if (!gs.length) {
+      html += sh(pfx + s.label);
+      html += `<div class="grid"><div class="empty">本日の ${s.label} 試合情報なし</div></div>`;
+      continue;
+    }
+    if (live.length)     { html += sh(`${pfx}LIVE NOW`, true); html += `<div class="grid">${live.map(g => rc(g, s)).join('')}</div>`; }
+    if (upcoming.length) { html += sh(`${pfx}本日予定`);       html += `<div class="grid">${upcoming.map(g => rc(g, s)).join('')}</div>`; }
+    if (final.length)    { html += sh(`${pfx}終了`);           html += `<div class="grid">${final.map(g => rc(g, s)).join('')}</div>`; }
+  }
+
+  document.getElementById('main').innerHTML = html || '<div style="padding:3rem;text-align:center;color:var(--muted)">データなし</div>';
+}
+
+function sh(label, isLive = false) {
+  return `<div class="sec-head"><span class="sec-label ${isLive ? 'live' : ''}">${label}</span><div class="sec-line"></div></div>`;
+}
+
+function rc(g, s) {
+  if (g.type === 'race') return raceCard(g, s);
+  const st = g.status === 'live' ? `<span class="c-st live">${g.time}</span>`
+    : g.status === 'upcoming'    ? `<span class="c-st upcoming">${g.time}</span>`
+    :                              `<span class="c-st final">終了</span>`;
+  const score = g.hs !== null
+    ? `<div class="score-n"><span>${g.hs}</span><span class="sc-sep">–</span><span>${g.as}</span></div>`
+    : `<div class="score-vs">VS</div>`;
+  return `
+  <div class="card" style="--sc:${s.color}" id="card-${g.id}">
+    <div class="card-top"><span class="c-league">${g.league}</span>${st}</div>
+    <div class="matchup">
+      <div class="team"><div class="t-name">${g.home.name}</div><div class="t-sub">${g.home.sub}</div></div>
+      <div class="score-c">${score}</div>
+      <div class="team r"><div class="t-name">${g.away.name}</div><div class="t-sub">${g.away.sub}</div></div>
+    </div>
+  </div>`;
+}
+
+function raceCard(g, s) {
+  const st = g.status === 'live' ? `<span class="c-st live">${g.time}</span>` : `<span class="c-st final">終了</span>`;
+  const rows = g.racers.map(r => `
+    <div class="race-row ${r.pos === 1 ? 'p1-row' : ''}">
+      <div class="rpos ${r.pos <= 3 ? 'p' + r.pos : ''}">${r.pos}</div>
+      <div style="flex:1"><div class="rdrv">${r.flag} ${r.driver}</div><div class="rteam">${r.team}</div></div>
+      <div class="rgap">${r.gap}</div>
+    </div>`).join('');
+  return `
+  <div class="card race-card" style="--sc:${s.color}" id="card-${g.id}">
+    <div class="card-top"><span class="c-league">${g.league}</span>${st}</div>
+    <div class="race-list">${rows}</div>
+    ${g.note ? `<div class="rnote">📍 ${g.note}</div>` : ''}
+  </div>`;
+}
+</script>
+</body>
+</html>
